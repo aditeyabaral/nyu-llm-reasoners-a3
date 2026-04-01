@@ -237,7 +237,7 @@ def train(args):
     step = 0
     eval_step = 0
     running_loss = 0.0
-    running_entropy = 0.0
+    # running_entropy = 0.0
     running_grad_norm = 0.0
     running_count = 0  # microbatch count (for loss/entropy averaging)
     running_opt_steps = 0  # optimizer step count (for grad_norm averaging)
@@ -283,15 +283,16 @@ def train(args):
             model=policy,
             input_ids=input_ids,
             labels=labels,
-            return_token_entropy=True,
+            return_token_entropy=False,
         )
         log_probs = result["log_probs"]
+
         # Mean entropy over response tokens only
-        token_entropy = result["token_entropy"]
-        n_response_tokens = response_mask.sum().clamp(min=1)
-        mean_entropy = (
-            (token_entropy * response_mask).sum() / n_response_tokens
-        ).detach()
+        # token_entropy = result["token_entropy"]
+        # n_response_tokens = response_mask.sum().clamp(min=1)
+        # mean_entropy = (
+        #     (token_entropy * response_mask).sum() / n_response_tokens
+        # ).detach()
 
         # Microbatch train step
         loss, _ = sft_microbatch_train_step(
@@ -302,7 +303,7 @@ def train(args):
         )
 
         running_loss += loss.item()
-        running_entropy += mean_entropy.item()
+        # running_entropy += mean_entropy.item()
         running_count += 1
 
         # Optimizer step every gradient_accumulation_steps microbatches
@@ -320,12 +321,12 @@ def train(args):
             # Logging
             if step % args.log_interval == 0:
                 avg_loss = running_loss / running_count
-                avg_entropy = running_entropy / running_count
+                # avg_entropy = running_entropy / running_count
                 avg_grad_norm = running_grad_norm / running_opt_steps
                 elapsed = time.time() - global_start
                 log = {
                     "train/loss": avg_loss,
-                    "train/entropy": avg_entropy,
+                    # "train/entropy": avg_entropy,
                     "train/grad_norm": avg_grad_norm,
                     "train/learning_rate": scheduler.get_last_lr()[0],
                     "train/step": step,
@@ -336,7 +337,7 @@ def train(args):
                         {
                             "step": step,
                             "train_loss": round(avg_loss, 4),
-                            "train_entropy": round(avg_entropy, 4),
+                            # "train_entropy": round(avg_entropy, 4),
                             "grad_norm": round(avg_grad_norm, 4),
                         }
                     )
@@ -344,7 +345,7 @@ def train(args):
                 if args.wandb_project is not None:
                     wandb.log({**log, "train_step": step})
                 running_loss = 0.0
-                running_entropy = 0.0
+                # running_entropy = 0.0
                 running_grad_norm = 0.0
                 running_count = 0
                 running_opt_steps = 0

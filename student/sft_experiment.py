@@ -3,12 +3,13 @@
 import argparse
 import json
 import time
+from itertools import cycle
 from pathlib import Path
 from unittest.mock import patch
 
 import torch
 import wandb
-from datasets import load_from_disk
+from datasets import load_from_disk, load_dataset
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -38,7 +39,7 @@ def load_intellect_dataset(data_path, max_examples=None):
     if max_examples:
         dataset = dataset.select(range(min(max_examples, len(dataset))))
     examples = []
-    for ex in dataset:
+    for ex in tqdm(dataset, desc="Loading dataset", leave=False):
         msgs = ex.get("messages", [])
         sys_msg = next((m["content"] for m in msgs if m["role"] == "system"), "")
         user_msg = next((m["content"] for m in msgs if m["role"] == "user"), "")
@@ -168,11 +169,12 @@ def train(args):
     math_prompt_template = (
         (Path("student/prompts/intellect.prompt")).read_text().strip()
     )
-    from datasets import load_dataset
 
     math_ds = load_dataset("hiyouga/math12k", split="test")
-    math_prompts = [math_prompt_template + "\n\n" + ex["problem"] for ex in math_ds]
-    math_gts = [ex["answer"] for ex in math_ds]
+    math_prompts, math_gts = [], []
+    for ex in tqdm(math_ds, desc="Loading MATH dataset", leave=False):
+        math_prompts.append(math_prompt_template + "\n\n" + ex["problem"])
+        math_gts.append(ex["answer"])
 
     # Load data
     print("Loading dataset...")
@@ -181,7 +183,7 @@ def train(args):
     )
     val_raw = load_from_disk(args.val_path)
     val_examples = []
-    for ex in val_raw:
+    for ex in tqdm(val_raw, desc="Loading val examples", leave=False):
         msgs = ex.get("messages", [])
         sys_msg = next((m["content"] for m in msgs if m["role"] == "system"), "")
         user_msg = next((m["content"] for m in msgs if m["role"] == "user"), "")
@@ -240,7 +242,6 @@ def train(args):
     running_count = 0  # microbatch count (for loss/entropy averaging)
     running_opt_steps = 0  # optimizer step count (for grad_norm averaging)
     global_start = time.time()
-    microbatch_count = 0
 
     print("\nRunning initial evaluation...")
     policy.eval()
@@ -266,123 +267,121 @@ def train(args):
         )
 
     optimizer.zero_grad()
-    progress_bar = tqdm(total=args.total_steps)
+    progress_bar = tqdm(total=args.total_steps, desc="Training")
 
-    while step < args.total_steps:
-        for batch in train_loader:
-            if step >= args.total_steps:
-                break
+    for microbatch_idx, batch in enumerate(cycle(train_loader)):
+        if step >= args.total_steps:
+            break
 
-            input_ids = batch["input_ids"].to(device)
-            labels = batch["labels"].to(device)
-            response_mask = batch["response_mask"].to(device)
+        input_ids = batch["input_ids"].to(device)
+        labels = batch["labels"].to(device)
+        response_mask = batch["response_mask"].to(device)
 
-            # Forward pass
-            policy.train()
-            result = get_response_log_probs(
-                model=policy,
-                input_ids=input_ids,
-                labels=labels,
-                return_token_entropy=True,
+        # Forward pass
+        policy.train()
+        result = get_response_log_probs(
+            model=policy,
+            input_ids=input_ids,
+            labels=labels,
+            return_token_entropy=True,
+        )
+        log_probs = result["log_probs"]
+        # Mean entropy over response tokens only
+        token_entropy = result["token_entropy"]
+        n_response_tokens = response_mask.sum().clamp(min=1)
+        mean_entropy = (
+            (token_entropy * response_mask).sum() / n_response_tokens
+        ).detach()
+
+        # Microbatch train step
+        loss, _ = sft_microbatch_train_step(
+            policy_log_probs=log_probs,
+            response_mask=response_mask,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            normalize_constant=1.0,
+        )
+
+        running_loss += loss.item()
+        running_entropy += mean_entropy.item()
+        running_count += 1
+
+        # Optimizer step every gradient_accumulation_steps microbatches
+        if (microbatch_idx + 1) % args.gradient_accumulation_steps == 0:
+            grad_norm = torch.nn.utils.clip_grad_norm_(
+                policy.parameters(), args.grad_clip
             )
-            log_probs = result["log_probs"]
-            # Mean entropy over response tokens only
-            token_entropy = result["token_entropy"]
-            n_response_tokens = response_mask.sum().clamp(min=1)
-            mean_entropy = (
-                (token_entropy * response_mask).sum() / n_response_tokens
-            ).detach()
+            optimizer.step()
+            scheduler.step()
+            optimizer.zero_grad()
+            step += 1
+            running_grad_norm += grad_norm.item()
+            running_opt_steps += 1
 
-            # Microbatch train step
-            loss, _ = sft_microbatch_train_step(
-                policy_log_probs=log_probs,
-                response_mask=response_mask,
-                gradient_accumulation_steps=args.gradient_accumulation_steps,
-                normalize_constant=1.0,
-            )
-
-            running_loss += loss.item()
-            running_entropy += mean_entropy.item()
-            running_count += 1
-            microbatch_count += 1
-
-            # Optimizer step every gradient_accumulation_steps microbatches
-            if microbatch_count % args.gradient_accumulation_steps == 0:
-                grad_norm = torch.nn.utils.clip_grad_norm_(
-                    policy.parameters(), args.grad_clip
+            # Logging
+            if step % args.log_interval == 0:
+                avg_loss = running_loss / running_count
+                avg_entropy = running_entropy / running_count
+                avg_grad_norm = running_grad_norm / running_opt_steps
+                elapsed = time.time() - global_start
+                log = {
+                    "train/loss": avg_loss,
+                    "train/entropy": avg_entropy,
+                    "train/grad_norm": avg_grad_norm,
+                    "train/learning_rate": scheduler.get_last_lr()[0],
+                    "train/step": step,
+                    "train/elapsed": elapsed,
+                }
+                tqdm.write(
+                    json.dumps(
+                        {
+                            "step": step,
+                            "train_loss": round(avg_loss, 4),
+                            "train_entropy": round(avg_entropy, 4),
+                            "grad_norm": round(avg_grad_norm, 4),
+                        }
+                    )
                 )
-                optimizer.step()
-                scheduler.step()
-                optimizer.zero_grad()
-                step += 1
-                running_grad_norm += grad_norm.item()
-                running_opt_steps += 1
+                if args.wandb_project is not None:
+                    wandb.log({**log, "train_step": step})
+                running_loss = 0.0
+                running_entropy = 0.0
+                running_grad_norm = 0.0
+                running_count = 0
+                running_opt_steps = 0
 
-                # Logging
-                if step % args.log_interval == 0:
-                    avg_loss = running_loss / running_count
-                    avg_entropy = running_entropy / running_count
-                    avg_grad_norm = running_grad_norm / running_opt_steps
-                    elapsed = time.time() - global_start
-                    log = {
-                        "train/loss": avg_loss,
-                        "train/entropy": avg_entropy,
-                        "train/grad_norm": avg_grad_norm,
-                        "train/learning_rate": scheduler.get_last_lr()[0],
-                        "train/step": step,
-                        "train/elapsed": elapsed,
-                    }
-                    tqdm.write(
-                        json.dumps(
-                            {
-                                "step": step,
-                                "train_loss": round(avg_loss, 4),
-                                "train_entropy": round(avg_entropy, 4),
-                                "grad_norm": round(avg_grad_norm, 4),
-                            }
-                        )
+            # Evaluation
+            if step % args.eval_interval == 0:
+                tqdm.write(f"\nEvaluating at step {step}...")
+                policy.eval()
+                intellect_acc, math_acc = run_all_evals(
+                    policy, llm, val_examples, math_prompts, math_gts
+                )
+                eval_step += 1
+                tqdm.write(
+                    json.dumps(
+                        {
+                            "step": step,
+                            "val_intellect_accuracy": round(intellect_acc, 4),
+                            "val_math_accuracy": round(math_acc, 4),
+                        }
                     )
-                    if args.wandb_project is not None:
-                        wandb.log({**log, "train_step": step})
-                    running_loss = 0.0
-                    running_entropy = 0.0
-                    running_grad_norm = 0.0
-                    running_count = 0
-                    running_opt_steps = 0
-
-                # Evaluation
-                if step % args.eval_interval == 0:
-                    print(f"\nEvaluating at step {step}...")
-                    policy.eval()
-                    intellect_acc, math_acc = run_all_evals(
-                        policy, llm, val_examples, math_prompts, math_gts
+                )
+                if args.wandb_project is not None:
+                    wandb.log(
+                        {
+                            "eval/intellect_accuracy": intellect_acc,
+                            "eval/math_accuracy": math_acc,
+                            "eval_step": eval_step,
+                        }
                     )
-                    eval_step += 1
-                    tqdm.write(
-                        json.dumps(
-                            {
-                                "step": step,
-                                "val_intellect_accuracy": round(intellect_acc, 4),
-                                "val_math_accuracy": round(math_acc, 4),
-                            }
-                        )
-                    )
-                    if args.wandb_project is not None:
-                        wandb.log(
-                            {
-                                "eval/intellect_accuracy": intellect_acc,
-                                "eval/math_accuracy": math_acc,
-                                "eval_step": eval_step,
-                            }
-                        )
 
-                    # Save checkpoint
-                    policy.save_pretrained(str(output_dir / f"step_{step}"))
-                    tokenizer.save_pretrained(str(output_dir / f"step_{step}"))
-                    tqdm.write(f"Saved checkpoint: {output_dir / f'step_{step}'}")
+                # Save checkpoint
+                policy.save_pretrained(str(output_dir / f"step_{step}"))
+                tokenizer.save_pretrained(str(output_dir / f"step_{step}"))
+                tqdm.write(f"Saved checkpoint: {output_dir / f'step_{step}'}")
 
-                progress_bar.update(1)
-                progress_bar.set_postfix({"step": step, "loss": f"{loss.item():.4f}"})
+            progress_bar.update(1)
+            progress_bar.set_postfix({"step": step, "loss": f"{loss.item():.4f}"})
 
     # Save final model
     policy.save_pretrained(str(output_dir / "final"))
@@ -396,7 +395,7 @@ def train(args):
     # Intellect test set
     test_raw = load_from_disk(args.test_path)
     test_examples = []
-    for ex in test_raw:
+    for ex in tqdm(test_raw, desc="Loading test examples", leave=False):
         msgs = ex.get("messages", [])
         sys_msg = next((m["content"] for m in msgs if m["role"] == "system"), "")
         user_msg = next((m["content"] for m in msgs if m["role"] == "user"), "")

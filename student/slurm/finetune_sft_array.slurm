@@ -4,15 +4,15 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=24:00:00
+#SBATCH --time=8:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --open-mode=append
-#SBATCH --error=logs/%j.err
-#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%x_%j.err
+#SBATCH --output=logs/%x_%j.out
 #SBATCH --chdir=/scratch/ab12057/nyu-llm-reasoners-a3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ab12057@nyu.edu
-#SBATCH --array=0-4%5
+#SBATCH --array=0-3%4
 
 set -e
 
@@ -92,7 +92,8 @@ uv run student/sft_experiment.py \
     --vllm-device cuda:0 \
     --policy-device cuda:0 \
     --gpu-memory-utilization $GPU_MEMORY_UTILIZATION \
-    --wandb-project "nyu-llm-reasoners-sft" \
+    --wandb-project "sft-intellect-math" \
+    --wandb-entity "csciga3033-llm-reasoners" \
     --wandb-name "$RUN_NAME"
 
 echo "############### End Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"

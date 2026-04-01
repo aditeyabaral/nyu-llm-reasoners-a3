@@ -21,6 +21,7 @@ dependencies = [
     "xopen>=2.0.2",
     "datasets>=3.0.0",
     "ruff>=0.15.8",
+    "gdown>=5.2.1",
 ]
 
 [tool.setuptools.packages.find]

@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=6:00:00
+#SBATCH --time=24:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%j.err
@@ -24,17 +24,21 @@ nvidia-smi
 
 # Dataset size configurations (None = full dataset)
 MAX_EXAMPLES_CONFIGS=(128 256 512 1024 "None")
+# 25 epochs proportional to dataset size (effective batch size = 32)
+TOTAL_STEPS_CONFIGS=(100 200 400 800 7813)
+# ~10 eval points per run (total_steps / 10)
+EVAL_INTERVAL_CONFIGS=(10 20 40 80 781)
 
 # Parse config for this job
 MAX_EXAMPLES=${MAX_EXAMPLES_CONFIGS[$SLURM_ARRAY_TASK_ID]}
+TOTAL_STEPS=${TOTAL_STEPS_CONFIGS[$SLURM_ARRAY_TASK_ID]}
+EVAL_INTERVAL=${EVAL_INTERVAL_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 # Training hyperparameters
-TOTAL_STEPS=1000
 BATCH_SIZE=4
 GRADIENT_ACCUMULATION_STEPS=8
 LEARNING_RATE=2e-5
 GRAD_CLIP=1.0
-EVAL_INTERVAL=100
 LOG_INTERVAL=10
 SEED=42
 GPU_MEMORY_UTILIZATION=0.5

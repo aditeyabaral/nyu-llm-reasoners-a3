@@ -207,6 +207,9 @@ def train(args):
         weight_decay=0.0,
         betas=(0.9, 0.95),
     )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=args.total_steps, eta_min=0.0
+    )
 
     # vLLM
     print("Initializing vLLM for evaluation...")
@@ -309,6 +312,7 @@ def train(args):
                     policy.parameters(), args.grad_clip
                 )
                 optimizer.step()
+                scheduler.step()
                 optimizer.zero_grad()
                 step += 1
                 running_grad_norm += grad_norm.item()
@@ -324,7 +328,7 @@ def train(args):
                         "train/loss": avg_loss,
                         "train/entropy": avg_entropy,
                         "train/grad_norm": avg_grad_norm,
-                        "train/learning_rate": args.learning_rate,
+                        "train/learning_rate": scheduler.get_last_lr()[0],
                         "train/step": step,
                         "train/elapsed": elapsed,
                     }

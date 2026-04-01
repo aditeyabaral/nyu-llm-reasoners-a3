@@ -165,8 +165,11 @@ def train(args):
     ).to(device)
 
     # Load prompt template and MATH dataset once (reused at every eval)
-    math_prompt_template = (Path("student/prompts/intellect.prompt")).read_text().strip()
+    math_prompt_template = (
+        (Path("student/prompts/intellect.prompt")).read_text().strip()
+    )
     from datasets import load_dataset
+
     math_ds = load_dataset("hiyouga/math12k", split="test")
     math_prompts = [math_prompt_template + "\n\n" + ex["problem"] for ex in math_ds]
     math_gts = [ex["answer"] for ex in math_ds]
@@ -398,8 +401,18 @@ def train(args):
             {"prompt": prompt, "ground_truth": ex.get("ground_truth", "")}
         )
 
-    intellect_test_acc, math_test_acc = run_all_evals(
-        policy, llm, test_examples, math_prompts, math_gts
+    load_policy_into_vllm(policy, llm)
+    intellect_test_acc = evaluate(
+        llm,
+        [ex["prompt"] for ex in test_examples],
+        [ex["ground_truth"] for ex in test_examples],
+        save_path=str(output_dir / "intellect_test_results.json"),
+    )
+    math_test_acc = evaluate(
+        llm,
+        math_prompts,
+        math_gts,
+        save_path=str(output_dir / "math_test_results.json"),
     )
 
     tqdm.write(

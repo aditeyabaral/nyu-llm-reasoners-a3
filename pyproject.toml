@@ -20,6 +20,7 @@ dependencies = [
     "wandb>=0.19.8",
     "xopen>=2.0.2",
     "datasets>=3.0.0",
+    "ruff>=0.15.8",
 ]
 
 [tool.setuptools.packages.find]

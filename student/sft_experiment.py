@@ -87,20 +87,15 @@ def run_eval(llm, val_examples):
     return evaluate(llm, prompts, gts)
 
 
-def run_math_eval(llm, math_prompt_template):
-    from datasets import load_dataset
-
-    math_ds = load_dataset("hiyouga/math12k", split="test")
-    prompts = [math_prompt_template + "\n\n" + ex["problem"] for ex in math_ds]
-    gts = [ex["answer"] for ex in math_ds]
-    return evaluate(llm, prompts, gts)
+def run_math_eval(llm, math_prompts, math_gts):
+    return evaluate(llm, math_prompts, math_gts)
 
 
-def run_all_evals(policy, llm, val_examples, math_prompt_template):
+def run_all_evals(policy, llm, val_examples, math_prompts, math_gts):
     """Load policy into vLLM once, then run both eval sets."""
     load_policy_into_vllm(policy, llm)
     intellect_acc = run_eval(llm, val_examples)
-    math_acc = run_math_eval(llm, math_prompt_template)
+    math_acc = run_math_eval(llm, math_prompts, math_gts)
     return intellect_acc, math_acc
 
 
@@ -169,10 +164,12 @@ def train(args):
         args.model, torch_dtype=torch.bfloat16
     ).to(device)
 
-    # Load prompt template for MATH evaluation
-    math_prompt_template = (
-        (Path("student/prompts/intellect.prompt")).read_text().strip()
-    )
+    # Load prompt template and MATH dataset once (reused at every eval)
+    math_prompt_template = (Path("student/prompts/intellect.prompt")).read_text().strip()
+    from datasets import load_dataset
+    math_ds = load_dataset("hiyouga/math12k", split="test")
+    math_prompts = [math_prompt_template + "\n\n" + ex["problem"] for ex in math_ds]
+    math_gts = [ex["answer"] for ex in math_ds]
 
     # Load data
     print("Loading dataset...")
@@ -242,7 +239,7 @@ def train(args):
     print("\nRunning initial evaluation...")
     policy.eval()
     intellect_acc, math_acc = run_all_evals(
-        policy, llm, val_examples, math_prompt_template
+        policy, llm, val_examples, math_prompts, math_gts
     )
     tqdm.write(
         json.dumps(
@@ -351,7 +348,7 @@ def train(args):
                     print(f"\nEvaluating at step {step}...")
                     policy.eval()
                     intellect_acc, math_acc = run_all_evals(
-                        policy, llm, val_examples, math_prompt_template
+                        policy, llm, val_examples, math_prompts, math_gts
                     )
                     eval_step += 1
                     tqdm.write(
@@ -402,7 +399,7 @@ def train(args):
         )
 
     intellect_test_acc, math_test_acc = run_all_evals(
-        policy, llm, test_examples, math_prompt_template
+        policy, llm, test_examples, math_prompts, math_gts
     )
 
     tqdm.write(

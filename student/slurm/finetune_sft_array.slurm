@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=8:00:00
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --output=logs/%x_%j.out
@@ -35,13 +35,13 @@ TOTAL_STEPS=${TOTAL_STEPS_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 EVAL_INTERVAL=${EVAL_INTERVAL_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 # Training hyperparameters
-BATCH_SIZE=4
-GRADIENT_ACCUMULATION_STEPS=8
+BATCH_SIZE=2
+GRADIENT_ACCUMULATION_STEPS=16
 LEARNING_RATE=2e-5
 GRAD_CLIP=1.0
 LOG_INTERVAL=10
 SEED=42
-GPU_MEMORY_UTILIZATION=0.5
+GPU_MEMORY_UTILIZATION=0.85
 
 # Paths
 MODEL="Qwen/Qwen2.5-Math-1.5B"
@@ -90,7 +90,7 @@ uv run student/sft_experiment.py \
     --log-interval $LOG_INTERVAL \
     --seed $SEED \
     --vllm-device cuda:0 \
-    --policy-device cuda:0 \
+    --policy-device cuda:1 \
     --gpu-memory-utilization $GPU_MEMORY_UTILIZATION \
     --wandb-project "sft-intellect-math" \
     --wandb-entity "csciga3033-llm-reasoners" \

@@ -164,6 +164,7 @@ def train(args):
     policy = AutoModelForCausalLM.from_pretrained(
         args.model, torch_dtype=torch.bfloat16
     ).to(device)
+    policy.gradient_checkpointing_enable()
 
     # Load prompt template and MATH dataset once (reused at every eval)
     math_prompt_template = (

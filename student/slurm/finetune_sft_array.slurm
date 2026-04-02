@@ -39,6 +39,7 @@ BATCH_SIZE=2
 GRADIENT_ACCUMULATION_STEPS=16
 LEARNING_RATE=2e-5
 GRAD_CLIP=1.0
+WARMUP_RATIO=0.1
 LOG_INTERVAL=10
 SEED=42
 GPU_MEMORY_UTILIZATION=0.85
@@ -86,6 +87,7 @@ uv run student/sft_experiment.py \
     --gradient-accumulation-steps $GRADIENT_ACCUMULATION_STEPS \
     --learning-rate $LEARNING_RATE \
     --grad-clip $GRAD_CLIP \
+    --warmup-ratio $WARMUP_RATIO \
     --eval-interval $EVAL_INTERVAL \
     --log-interval $LOG_INTERVAL \
     --seed $SEED \

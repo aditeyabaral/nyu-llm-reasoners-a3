@@ -12,7 +12,7 @@ import wandb
 from datasets import load_from_disk, load_dataset
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 from vllm import LLM
 
 from student.sft import (
@@ -126,6 +126,7 @@ def parse_args():
     parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
     parser.add_argument("--grad-clip", type=float, default=1.0)
+    parser.add_argument("--warmup-ratio", type=float, default=0.1)
 
     # Evaluation
     parser.add_argument("--eval-interval", type=int, default=100)
@@ -210,8 +211,12 @@ def train(args):
         weight_decay=0.0,
         betas=(0.9, 0.95),
     )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=args.total_steps, eta_min=0.0
+    warmup_steps = int(args.warmup_ratio * args.total_steps)
+
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=args.total_steps,
     )
 
     # vLLM

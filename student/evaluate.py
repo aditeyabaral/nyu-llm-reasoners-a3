@@ -6,7 +6,7 @@ from datasets import load_dataset, load_from_disk
 from tqdm import tqdm
 from vllm import LLM, SamplingParams
 
-from drgrpo_grader import question_only_reward_fn
+from student.drgrpo_grader import question_only_reward_fn
 
 
 def load_prompt(name: str = "intellect") -> str:

@@ -4,7 +4,7 @@
 #SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=1:30:00
+#SBATCH --time=2:00:00
 #SBATCH --partition=c24m170-a100-2
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
@@ -13,7 +13,7 @@
 #SBATCH --chdir=/scratch/ab12057/nyu-llm-reasoners-a3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ab12057@nyu.edu
-#SBATCH --array=0-2%3
+#SBATCH --array=0-4%5
 
 set -e
 
@@ -22,7 +22,7 @@ echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 nvidia-smi
 
 # Learning rates to sweep
-LR_CONFIGS=(5e-6 1e-5 3e-5)
+LR_CONFIGS=(1e-5 2e-5 3e-5 5e-5 8e-5)
 LR=${LR_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 RUN_NAME="grpo-lr-${LR}"

@@ -4,7 +4,7 @@
 #SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=1:30:00
+#SBATCH --time=2:00:00
 #SBATCH --partition=c24m170-a100-2
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append

@@ -12,7 +12,11 @@ import wandb
 from datasets import load_from_disk, load_dataset
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    get_cosine_schedule_with_warmup,
+)
 from vllm import LLM
 
 from student.sft import (

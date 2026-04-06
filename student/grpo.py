@@ -2,6 +2,8 @@ from typing import Callable, Literal
 
 import torch
 
+from student.sft import masked_normalize
+
 
 def masked_mean(
     tensor: torch.Tensor,
@@ -85,8 +87,14 @@ def compute_policy_gradient_loss(
         assert advantages is not None
         return compute_naive_policy_gradient_loss(advantages, policy_log_probs), {}
     elif loss_type == "grpo_clip":
-        assert advantages is not None and old_log_probs is not None and cliprange is not None
-        return compute_grpo_clip_loss(advantages, policy_log_probs, old_log_probs, cliprange)
+        assert (
+            advantages is not None
+            and old_log_probs is not None
+            and cliprange is not None
+        )
+        return compute_grpo_clip_loss(
+            advantages, policy_log_probs, old_log_probs, cliprange
+        )
     else:
         raise ValueError(f"Unknown loss_type: {loss_type}")
 
@@ -100,7 +108,9 @@ def grpo_microbatch_train_step(
     advantages: torch.Tensor | None = None,
     old_log_probs: torch.Tensor | None = None,
     cliprange: float | None = None,
+    normalize_constant: float | None = None,
 ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+
     per_token_loss, metadata = compute_policy_gradient_loss(
         policy_log_probs=policy_log_probs,
         loss_type=loss_type,
@@ -109,7 +119,15 @@ def grpo_microbatch_train_step(
         old_log_probs=old_log_probs,
         cliprange=cliprange,
     )
-    per_example_loss = masked_mean(per_token_loss, response_mask, dim=1)
+    if normalize_constant is not None:
+        per_example_loss = masked_normalize(
+            per_token_loss,
+            response_mask,
+            dim=1,
+            normalize_constant=normalize_constant,
+        )
+    else:
+        per_example_loss = masked_mean(per_token_loss, response_mask, dim=1)
     loss = per_example_loss.mean() / gradient_accumulation_steps
     loss.backward()
     return loss, metadata

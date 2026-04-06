@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=4:00:00
-#SBATCH --gres=gpu:l40s:2
+#SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --output=logs/%x_%j.out
@@ -29,7 +29,7 @@ MAX_EXAMPLES_CONFIGS=(128 256 512 1024 "None")
 MAX_EXAMPLES=${MAX_EXAMPLES_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 # Training hyperparameters
-BATCH_SIZE=2
+BATCH_SIZE=4
 GRADIENT_ACCUMULATION_STEPS=56
 NUM_EPOCHS=25
 EVAL_POINTS=10

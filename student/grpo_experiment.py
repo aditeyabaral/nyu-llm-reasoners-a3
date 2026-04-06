@@ -236,7 +236,7 @@ def train(args):
     print("Loading model and tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     policy = AutoModelForCausalLM.from_pretrained(
-        args.model, torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2"
+        args.model, torch_dtype=torch.bfloat16, attn_implementation="sdpa"
     ).to(device)
     policy.gradient_checkpointing_enable()
 

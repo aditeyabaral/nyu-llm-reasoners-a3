@@ -4,7 +4,7 @@
 #SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=8:00:00
+#SBATCH --time=6:00:00
 #SBATCH --partition=c24m170-a100-2
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
@@ -33,23 +33,19 @@ nvidia-smi
 
 # Dataset size configurations (None = full dataset)
 MAX_EXAMPLES_CONFIGS=(128 256 512 1024 "None")
-# 25 epochs proportional to dataset size (effective batch size = 32)
-TOTAL_STEPS_CONFIGS=(100 200 400 800 7813)
-# ~10 eval points per run (total_steps / 10)
-EVAL_INTERVAL_CONFIGS=(10 20 40 80 781)
 
 # Parse config for this job
 MAX_EXAMPLES=${MAX_EXAMPLES_CONFIGS[$SLURM_ARRAY_TASK_ID]}
-TOTAL_STEPS=${TOTAL_STEPS_CONFIGS[$SLURM_ARRAY_TASK_ID]}
-EVAL_INTERVAL=${EVAL_INTERVAL_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 # Training hyperparameters
 BATCH_SIZE=2
-GRADIENT_ACCUMULATION_STEPS=16
+GRADIENT_ACCUMULATION_STEPS=56
+NUM_EPOCHS=25
+EVAL_POINTS=10
 LEARNING_RATE=2e-5
 GRAD_CLIP=1.0
 WARMUP_RATIO=0.1
-LOG_INTERVAL=10
+LOG_INTERVAL=1
 SEED=42
 GPU_MEMORY_UTILIZATION=0.85
 
@@ -59,19 +55,31 @@ TRAIN_PATH="data/intellect_math/train"
 VAL_PATH="data/intellect_math/dev"
 TEST_PATH="data/intellect_math/test"
 
+# Resolve actual number of examples (full dataset requires counting)
 if [ "$MAX_EXAMPLES" = "None" ]; then
     RUN_NAME="sft-full"
     OUTPUT_DIR="checkpoints/sft/full"
     MAX_EXAMPLES_ARG=""
+    N_EXAMPLES=$(uv run python -c "from datasets import load_from_disk; print(len(load_from_disk('$TRAIN_PATH')))")
 else
     RUN_NAME="sft-${MAX_EXAMPLES}"
     OUTPUT_DIR="checkpoints/sft/${MAX_EXAMPLES}"
     MAX_EXAMPLES_ARG="--max-train-examples $MAX_EXAMPLES"
+    N_EXAMPLES=$MAX_EXAMPLES
 fi
+
+# Dynamically compute steps: multiply before dividing to avoid early truncation
+EFFECTIVE_BATCH_SIZE=$(( BATCH_SIZE * GRADIENT_ACCUMULATION_STEPS ))
+TOTAL_STEPS=$(( (N_EXAMPLES * NUM_EPOCHS) / EFFECTIVE_BATCH_SIZE ))
+EVAL_INTERVAL=$(( TOTAL_STEPS / EVAL_POINTS ))
+if [ "$EVAL_INTERVAL" -eq 0 ]; then EVAL_INTERVAL=1; fi
 
 echo "=== SFT EXPERIMENT ==="
 echo "Job ID: $SLURM_ARRAY_TASK_ID"
-echo "Max train examples: $MAX_EXAMPLES"
+echo "Max train examples: $MAX_EXAMPLES (actual: $N_EXAMPLES)"
+echo "Effective batch size: $EFFECTIVE_BATCH_SIZE"
+echo "Epochs: $NUM_EPOCHS | Total steps: $TOTAL_STEPS"
+echo "Eval interval: $EVAL_INTERVAL"
 echo "Output dir: $OUTPUT_DIR"
 echo "Run name: $RUN_NAME"
 echo ""

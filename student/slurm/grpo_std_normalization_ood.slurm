@@ -1,11 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=grpo_baselines
-#SBATCH --account=torch_pr_647_cds
+#SBATCH --job-name=grpo_std_norm
+#SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=2:00:00
-#SBATCH --gres=gpu:l40s:2
+#SBATCH --partition=c24m170-a100-2
+#SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --output=logs/%x_%A_%a.out
@@ -20,15 +21,17 @@ echo "############### Run Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"
 echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 nvidia-smi
 
-# Loss type configurations
-LOSS_TYPES=("no_baseline" "reinforce_with_baseline")
-LOSS_TYPE=${LOSS_TYPES[$SLURM_ARRAY_TASK_ID]}
+# std normalization configurations: 0=with_std, 1=no_std
+STD_FLAGS=("--use-std-normalization" "--no-std-normalization")
+STD_FLAG=${STD_FLAGS[$SLURM_ARRAY_TASK_ID]}
+STD_NAMES=("with_std" "no_std")
+STD_NAME=${STD_NAMES[$SLURM_ARRAY_TASK_ID]}
 
-RUN_NAME="grpo-baseline-${LOSS_TYPE}"
-OUTPUT_DIR="checkpoints/grpo/baselines/${LOSS_TYPE}"
+RUN_NAME="grpo-stdnorm-${STD_NAME}"
+OUTPUT_DIR="checkpoints/grpo/std_norm/${STD_NAME}"
 
-echo "=== GRPO BASELINES ==="
-echo "Loss type: $LOSS_TYPE"
+echo "=== GRPO STD NORMALIZATION ==="
+echo "Std normalization flag: $STD_FLAG"
 echo "Run name: $RUN_NAME"
 echo ""
 
@@ -50,8 +53,8 @@ uv run student/grpo_experiment.py \
     --epochs-per-rollout-batch 1 \
     --gradient-accumulation-steps 16 \
     --learning-rate 1e-5 \
-    --loss-type "$LOSS_TYPE" \
-    --use-std-normalization \
+    --loss-type "reinforce_with_baseline" \
+    $STD_FLAG \
     --length-normalization "masked_mean" \
     --sampling-temperature 0.7 \
     --sampling-max-tokens 1024 \

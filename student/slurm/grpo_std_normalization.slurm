@@ -1,12 +1,11 @@
 #!/bin/bash
 
 #SBATCH --job-name=grpo_std_norm
-#SBATCH --account=csci_ga_3033_131-2026sp
+#SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=2:00:00
-#SBATCH --partition=c24m170-a100-2
-#SBATCH --gres=gpu:a100:2
+#SBATCH --gres=gpu:l40s:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --output=logs/%x_%A_%a.out

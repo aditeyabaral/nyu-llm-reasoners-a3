@@ -1,18 +1,19 @@
 #!/bin/bash
 
-#SBATCH --job-name=grpo_baselines
-#SBATCH --account=torch_pr_647_cds
+#SBATCH --job-name=grpo_lr_sweep
+#SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=2:00:00
-#SBATCH --gres=gpu:l40s:2
+#SBATCH --partition=c24m170-a100-2
+#SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --output=logs/%x_%A_%a.out
 #SBATCH --chdir=/scratch/ab12057/nyu-llm-reasoners-a3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ab12057@nyu.edu
-#SBATCH --array=0-1%2
+#SBATCH --array=0-4%5
 
 set -e
 
@@ -20,15 +21,15 @@ echo "############### Run Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"
 echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 nvidia-smi
 
-# Loss type configurations
-LOSS_TYPES=("no_baseline" "reinforce_with_baseline")
-LOSS_TYPE=${LOSS_TYPES[$SLURM_ARRAY_TASK_ID]}
+# Learning rates to sweep
+LR_CONFIGS=(1e-5 2e-5 3e-5 5e-5 8e-5)
+LR=${LR_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
-RUN_NAME="grpo-baseline-${LOSS_TYPE}"
-OUTPUT_DIR="checkpoints/grpo/baselines/${LOSS_TYPE}"
+RUN_NAME="grpo-lr-${LR}"
+OUTPUT_DIR="checkpoints/grpo/lr_sweep/lr_${LR}"
 
-echo "=== GRPO BASELINES ==="
-echo "Loss type: $LOSS_TYPE"
+echo "=== GRPO LR SWEEP ==="
+echo "Learning rate: $LR"
 echo "Run name: $RUN_NAME"
 echo ""
 
@@ -49,8 +50,8 @@ uv run student/grpo_experiment.py \
     --group-size 8 \
     --epochs-per-rollout-batch 1 \
     --gradient-accumulation-steps 16 \
-    --learning-rate 1e-5 \
-    --loss-type "$LOSS_TYPE" \
+    --learning-rate "$LR" \
+    --loss-type "reinforce_with_baseline" \
     --use-std-normalization \
     --length-normalization "masked_mean" \
     --sampling-temperature 0.7 \

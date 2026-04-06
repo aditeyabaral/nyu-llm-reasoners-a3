@@ -1,11 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=grpo_baselines
-#SBATCH --account=torch_pr_647_cds
+#SBATCH --job-name=grpo_len_norm
+#SBATCH --account=csci_ga_3033_131-2026sp
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=2:00:00
-#SBATCH --gres=gpu:l40s:2
+#SBATCH --partition=c24m170-a100-2
+#SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --output=logs/%x_%A_%a.out
@@ -20,15 +21,15 @@ echo "############### Run Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"
 echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 nvidia-smi
 
-# Loss type configurations
-LOSS_TYPES=("no_baseline" "reinforce_with_baseline")
-LOSS_TYPE=${LOSS_TYPES[$SLURM_ARRAY_TASK_ID]}
+# Length normalization configurations
+LEN_NORM_CONFIGS=("masked_mean" "masked_normalize")
+LEN_NORM=${LEN_NORM_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
-RUN_NAME="grpo-baseline-${LOSS_TYPE}"
-OUTPUT_DIR="checkpoints/grpo/baselines/${LOSS_TYPE}"
+RUN_NAME="grpo-lennorm-${LEN_NORM}"
+OUTPUT_DIR="checkpoints/grpo/len_norm/${LEN_NORM}"
 
-echo "=== GRPO BASELINES ==="
-echo "Loss type: $LOSS_TYPE"
+echo "=== GRPO LENGTH NORMALIZATION ==="
+echo "Length normalization: $LEN_NORM"
 echo "Run name: $RUN_NAME"
 echo ""
 
@@ -50,9 +51,9 @@ uv run student/grpo_experiment.py \
     --epochs-per-rollout-batch 1 \
     --gradient-accumulation-steps 16 \
     --learning-rate 1e-5 \
-    --loss-type "$LOSS_TYPE" \
+    --loss-type "reinforce_with_baseline" \
     --use-std-normalization \
-    --length-normalization "masked_mean" \
+    --length-normalization "$LEN_NORM" \
     --sampling-temperature 0.7 \
     --sampling-max-tokens 1024 \
     --grad-clip 1.0 \

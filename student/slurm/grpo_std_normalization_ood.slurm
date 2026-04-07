@@ -43,9 +43,9 @@ export HF_HOME=/scratch/$USER/.cache/huggingface
 
 uv run student/grpo_experiment.py \
     --model "Qwen/Qwen2.5-Math-1.5B-Instruct" \
-    --train-path "data/countdown/train" \
-    --val-path "data/countdown/dev" \
-    --test-path "data/countdown/test" \
+    --train-path "data/countdown/dataset/train" \
+    --val-path "data/countdown/dataset/dev" \
+    --test-path "data/countdown/dataset/test" \
     --output-dir "$OUTPUT_DIR" \
     --n-grpo-steps 200 \
     --rollout-batch-size 16 \

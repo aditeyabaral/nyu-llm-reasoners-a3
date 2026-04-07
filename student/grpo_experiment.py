@@ -259,7 +259,7 @@ def train(args):
         weight_decay=0.0,
         betas=(0.9, 0.95),
     )
-    warmup_steps = max(1, int(args.warmup_ratio * args.n_grpo_steps))
+    warmup_steps = int(args.warmup_ratio * args.n_grpo_steps)
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=warmup_steps,

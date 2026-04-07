@@ -62,7 +62,7 @@ uv run student/grpo_experiment.py \
     --seed 42 \
     --vllm-device cuda:0 \
     --policy-device cuda:1 \
-    --gpu-memory-utilization 0.8 \
+    --gpu-memory-utilization 0.85 \
     --wandb-project "grpo-countdown" \
     --wandb-entity "csciga3033-llm-reasoners" \
     --wandb-name "$RUN_NAME"

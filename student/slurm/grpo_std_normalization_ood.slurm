@@ -59,6 +59,7 @@ uv run student/grpo_experiment.py \
     --sampling-temperature 0.7 \
     --sampling-max-tokens 1024 \
     --grad-clip 1.0 \
+    --warmup-ratio 0.05 \
     --eval-interval 10 \
     --log-interval 5 \
     --seed 42 \

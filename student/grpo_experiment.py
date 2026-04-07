@@ -10,7 +10,7 @@ import torch
 import wandb
 from datasets import load_from_disk
 from tqdm.auto import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup
+from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 from vllm import LLM, SamplingParams
 
 from student.sft import get_response_log_probs, tokenize_prompt_and_output
@@ -260,7 +260,7 @@ def train(args):
         betas=(0.9, 0.95),
     )
     warmup_steps = int(args.warmup_ratio * args.n_grpo_steps)
-    scheduler = get_linear_schedule_with_warmup(
+    scheduler = get_cosine_schedule_with_warmup(
         optimizer,
         num_warmup_steps=warmup_steps,
         num_training_steps=args.n_grpo_steps,

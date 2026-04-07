@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=2:00:00
+#SBATCH --time=2:30:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
@@ -21,7 +21,7 @@ echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 nvidia-smi
 
 # Learning rates to sweep
-LR_CONFIGS=(1e-5 2e-5 3e-5 5e-5 8e-5)
+LR_CONFIGS=(1e-5 2e-5 3e-5 4e-5 5e-5)
 LR=${LR_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 
 RUN_NAME="grpo-lr-${LR}"

@@ -10,7 +10,7 @@ import torch
 import wandb
 from datasets import load_from_disk
 from tqdm.auto import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 from vllm import LLM, SamplingParams
 
 from student.sft import get_response_log_probs, tokenize_prompt_and_output
@@ -183,6 +183,7 @@ def parse_args():
 
     # Training
     parser.add_argument("--grad-clip", type=float, default=1.0)
+    parser.add_argument("--warmup-ratio", type=float, default=0.05)
 
     # Evaluation
     parser.add_argument("--eval-interval", type=int, default=10)
@@ -257,6 +258,12 @@ def train(args):
         lr=args.learning_rate,
         weight_decay=0.0,
         betas=(0.9, 0.95),
+    )
+    warmup_steps = int(args.warmup_ratio * args.n_grpo_steps)
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=args.n_grpo_steps,
     )
 
     # vLLM
@@ -458,6 +465,7 @@ def train(args):
                 policy.parameters(), args.grad_clip
             )
             optimizer.step()
+            scheduler.step()
             epoch_grad_norm += grad_norm.item()
             opt_steps_this_rollout += 1
 
@@ -481,7 +489,7 @@ def train(args):
         step = grpo_step + 1
         if step % args.log_interval == 0:
             c = running["count"]
-            current_lr = optimizer.param_groups[0]["lr"]
+            current_lr = scheduler.get_last_lr()[0]
             log = {
                 "train/loss": running["loss"] / c,
                 "train/mean_reward": running["reward"] / c,

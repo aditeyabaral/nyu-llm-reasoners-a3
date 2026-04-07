@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=2:00:00
+#SBATCH --time=2:30:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err
@@ -44,18 +44,19 @@ uv run student/grpo_experiment.py \
     --val-path "data/countdown/dataset/dev" \
     --test-path "data/countdown/dataset/test" \
     --output-dir "$OUTPUT_DIR" \
-    --n-grpo-steps 200 \
+    --n-grpo-steps 350 \
     --rollout-batch-size 64 \
     --group-size 8 \
     --epochs-per-rollout-batch 1 \
     --gradient-accumulation-steps 32 \
-    --learning-rate 1e-5 \
+    --learning-rate 3e-5 \
     --loss-type "reinforce_with_baseline" \
     --use-std-normalization \
     --length-normalization "$LEN_NORM" \
     --sampling-temperature 0.7 \
     --sampling-max-tokens 1024 \
     --grad-clip 1.0 \
+    --warmup-ratio 0.0 \
     --eval-interval 10 \
     --log-interval 5 \
     --seed 42 \

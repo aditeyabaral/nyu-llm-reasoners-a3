@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=2:30:00
+#SBATCH --time=2:15:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%A_%a.err

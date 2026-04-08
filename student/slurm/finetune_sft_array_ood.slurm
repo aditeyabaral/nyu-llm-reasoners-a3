@@ -25,6 +25,10 @@
 
 set -e
 
+# Background PID for the GPU keepalive process on cuda:0 (vLLM device sits idle during training).
+GPU_KEEPALIVE_PID=""
+trap 'echo "Shutting down GPU keepalive..."; kill $GPU_KEEPALIVE_PID 2>/dev/null; wait $GPU_KEEPALIVE_PID 2>/dev/null' EXIT
+
 echo "############### Run Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"
 echo "Current working directory: $(pwd)"
 echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
@@ -90,6 +94,18 @@ mkdir -p "$OUTPUT_DIR"
 source ~/.bashrc
 
 export HF_HOME=/scratch/$USER/.cache/huggingface
+
+echo "Starting GPU keepalive on cuda:0..."
+uv run python -c "
+import signal, sys, time, torch
+signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+t = torch.randn(4096, 4096, device='cuda:0', dtype=torch.bfloat16)
+print('GPU keepalive running on cuda:0...')
+while True:
+    torch.matmul(t, t)
+    time.sleep(0.001)
+" &
+GPU_KEEPALIVE_PID=$!
 
 echo "Starting training..."
 uv run student/sft_experiment.py \

@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=30:00:00
+#SBATCH --time=4:00:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%j.err
@@ -12,9 +12,15 @@
 #SBATCH --chdir=/scratch/ab12057/nyu-llm-reasoners-a3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ab12057@nyu.edu
-#SBATCH --array=4
+#SBATCH --array=0-3%4
 
 set -e
+
+# Background PID for the GPU keepalive process on cuda:0 (vLLM device sits idle during training).
+GPU_KEEPALIVE_PID=""
+
+# Always stop the keepalive when the job exits (success, failure, or cancel).
+trap 'echo "Shutting down GPU keepalive..."; kill $GPU_KEEPALIVE_PID 2>/dev/null; wait $GPU_KEEPALIVE_PID 2>/dev/null' EXIT
 
 echo "############### Run Log: $(date +%Y-%m-%d_%H:%M:%S) ###############"
 echo "Current working directory: $(pwd)"
@@ -81,6 +87,21 @@ mkdir -p "$OUTPUT_DIR"
 source ~/.bashrc
 
 export HF_HOME=/scratch/$USER/.cache/huggingface
+
+# Keep cuda:0 (vLLM eval device) above HPC 50% utilization threshold during training.
+# The SFT policy trains on cuda:1; cuda:0 is only used during periodic evaluation.
+# Without this, HPC cancels the job after 2+ hours of 0% GPU 0 utilization.
+echo "Starting GPU keepalive on cuda:0..."
+uv run python -c "
+import signal, sys, time, torch
+signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+t = torch.randn(4096, 4096, device='cuda:0', dtype=torch.bfloat16)
+print('GPU keepalive running on cuda:0...')
+while True:
+    torch.matmul(t, t)
+    time.sleep(0.001)
+" &
+GPU_KEEPALIVE_PID=$!
 
 echo "Starting training..."
 uv run student/sft_experiment.py \

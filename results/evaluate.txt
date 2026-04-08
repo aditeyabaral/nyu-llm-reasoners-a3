@@ -1,0 +1,57 @@
+############### Run Log: 2026-04-06_14:45:54 ###############
+Mon Apr  6 14:45:54 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:E3:00.0 Off |                    0 |
+| N/A   25C    P0             60W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+=== EVALUATION ===
+Model: Qwen/Qwen2.5-Math-1.5B
+Max examples: 500
+Output tag: baseline
+
+INFO 04-06 14:46:54 __init__.py:190] Automatically detected platform cuda.
+INFO 04-06 14:47:47 config.py:542] This model supports multiple tasks: {'score', 'classify', 'reward', 'generate', 'embed'}. Defaulting to 'generate'.
+INFO 04-06 14:47:47 llm_engine.py:234] Initializing a V0 LLM engine (v0.7.2) with config: model='Qwen/Qwen2.5-Math-1.5B', speculative_config=None, tokenizer='Qwen/Qwen2.5-Math-1.5B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='xgrammar'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=Qwen/Qwen2.5-Math-1.5B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=False, chunked_prefill_enabled=False, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"splitting_ops":[],"compile_sizes":[],"cudagraph_capture_sizes":[256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":256}, use_cached_outputs=False, 
+INFO 04-06 14:47:51 cuda.py:230] Using Flash Attention backend.
+INFO 04-06 14:47:51 model_runner.py:1110] Starting to load model Qwen/Qwen2.5-Math-1.5B...
+INFO 04-06 14:47:52 weight_utils.py:252] Using model weights format ['*.safetensors']
+INFO 04-06 14:47:52 weight_utils.py:297] No model.safetensors.index.json found in remote.
+INFO 04-06 14:47:56 model_runner.py:1115] Loading model weights took 2.8797 GB
+INFO 04-06 14:47:57 worker.py:267] Memory profiling takes 1.29 seconds
+INFO 04-06 14:47:57 worker.py:267] the current vLLM instance can use total_gpu_memory (79.25GiB) x gpu_memory_utilization (0.85) = 67.36GiB
+INFO 04-06 14:47:57 worker.py:267] model weights take 2.88GiB; non_torch_memory takes 0.09GiB; PyTorch activation peak memory takes 1.40GiB; the rest of the memory reserved for KV Cache is 62.99GiB.
+INFO 04-06 14:47:57 executor_base.py:110] # CUDA blocks: 147443, # CPU blocks: 9362
+INFO 04-06 14:47:57 executor_base.py:115] Maximum concurrency for 4096 tokens per request: 575.95x
+INFO 04-06 14:48:00 model_runner.py:1434] Capturing cudagraphs for decoding. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI. If out-of-memory error occurs during cudagraph capture, consider decreasing `gpu_memory_utilization` or switching to eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 04-06 14:48:16 model_runner.py:1562] Graph capturing finished in 16 secs, took 0.19 GiB
+INFO 04-06 14:48:16 llm_engine.py:431] init engine (profile, create kv cache, warmup model) took 20.00 seconds
+
+=== Intellect Test (data/intellect_math/test) ===
+[Sample] Solve the following math problem efficiently and clearly. Think carefully and step by step about your response and reason before providing a final response. Conclude your response with: 
+
+Therefore, t...
+Saved results to results/intellect_baseline.json
+Intellect Accuracy: 0.6360
+
+=== MATH Test ===
+[Sample] Solve the following math problem efficiently and clearly. Think carefully and step by step about your response and reason before providing a final response. Conclude your response with:
+
+Therefore, th...
+Saved results to results/math_baseline.json
+MATH Accuracy: 0.6080
+############### End Log: 2026-04-06_14:49:35 ###############

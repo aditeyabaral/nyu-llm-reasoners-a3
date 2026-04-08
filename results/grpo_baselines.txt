@@ -1,0 +1,484 @@
+############### Run Log: 2026-04-07_20:17:25 ###############
+SLURM_ARRAY_TASK_ID: 0
+Tue Apr  7 20:17:25 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:4B:00.0 Off |                    0 |
+| N/A   25C    P0             58W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA A100-SXM4-80GB          On  |   00000000:E3:00.0 Off |                    0 |
+| N/A   26C    P0             63W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+=== GRPO BASELINES ===
+Loss type: no_baseline
+Run name: grpo-baseline-no_baseline
+
+INFO 04-07 20:18:55 __init__.py:190] Automatically detected platform cuda.
+Namespace(train_path='data/countdown/dataset/train', val_path='data/countdown/dataset/dev', test_path='data/countdown/dataset/test', model='Qwen/Qwen2.5-Math-1.5B-Instruct', output_dir='checkpoints/grpo/baselines/no_baseline', n_grpo_steps=350, rollout_batch_size=64, group_size=8, epochs_per_rollout_batch=1, gradient_accumulation_steps=32, learning_rate=3e-05, advantage_eps=1e-06, cliprange=0.2, sampling_temperature=0.7, sampling_min_tokens=4, sampling_max_tokens=1024, loss_type='no_baseline', use_std_normalization=True, length_normalization='masked_mean', normalize_constant=None, grad_clip=1.0, warmup_ratio=0.0, eval_interval=10, max_val_examples=256, log_interval=5, wandb_project='grpo-countdown', wandb_name='grpo-baseline-no_baseline', wandb_entity='csciga3033-llm-reasoners', seed=42, vllm_device='cuda:0', policy_device='cuda:1', gpu_memory_utilization=0.85)
+n_prompts_per_rollout_batch: 8
+train_batch_size: 64
+micro_train_batch_size: 2
+n_microbatches_per_rollout_batch (per epoch): 32
+Loading model and tokenizer...
+Loading datasets...
+Train: 10000, Val: 256
+Initializing vLLM...
+INFO 04-07 20:20:15 config.py:542] This model supports multiple tasks: {'score', 'classify', 'generate', 'reward', 'embed'}. Defaulting to 'generate'.
+INFO 04-07 20:20:15 llm_engine.py:234] Initializing a V0 LLM engine (v0.7.2) with config: model='Qwen/Qwen2.5-Math-1.5B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-Math-1.5B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda:0, decoding_config=DecodingConfig(guided_decoding_backend='xgrammar'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=Qwen/Qwen2.5-Math-1.5B-Instruct, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=False, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"splitting_ops":[],"compile_sizes":[],"cudagraph_capture_sizes":[256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":256}, use_cached_outputs=False, 
+INFO 04-07 20:20:16 cuda.py:230] Using Flash Attention backend.
+INFO 04-07 20:20:17 model_runner.py:1110] Starting to load model Qwen/Qwen2.5-Math-1.5B-Instruct...
+INFO 04-07 20:20:17 weight_utils.py:252] Using model weights format ['*.safetensors']
+INFO 04-07 20:20:17 weight_utils.py:297] No model.safetensors.index.json found in remote.
+INFO 04-07 20:20:18 model_runner.py:1115] Loading model weights took 2.8797 GB
+INFO 04-07 20:20:19 worker.py:267] Memory profiling takes 0.57 seconds
+INFO 04-07 20:20:19 worker.py:267] the current vLLM instance can use total_gpu_memory (79.25GiB) x gpu_memory_utilization (0.85) = 67.36GiB
+INFO 04-07 20:20:19 worker.py:267] model weights take 2.88GiB; non_torch_memory takes 0.09GiB; PyTorch activation peak memory takes 1.40GiB; the rest of the memory reserved for KV Cache is 62.99GiB.
+INFO 04-07 20:20:19 executor_base.py:110] # CUDA blocks: 147443, # CPU blocks: 9362
+INFO 04-07 20:20:19 executor_base.py:115] Maximum concurrency for 4096 tokens per request: 575.95x
+INFO 04-07 20:20:23 model_runner.py:1434] Capturing cudagraphs for decoding. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI. If out-of-memory error occurs during cudagraph capture, consider decreasing `gpu_memory_utilization` or switching to eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 04-07 20:20:46 model_runner.py:1562] Graph capturing finished in 23 secs, took 0.19 GiB
+INFO 04-07 20:20:46 llm_engine.py:431] init engine (profile, create kv cache, warmup model) took 28.09 seconds
+
+Running initial evaluation...
+{"step": 0, "accuracy": 0.0, "format_accuracy": 0.015625, "answer_accuracy": 0.0}
+
+Starting GRPO for 350 steps...
+{"step": 5, "reward": 0.0, "loss": 0.0, "grad_norm": 0.0}
+{"step": 10, "reward": 0.0031, "loss": 0.0, "grad_norm": 0.0256}
+
+Evaluating at step 10...
+{"step": 10, "accuracy": 0.00390625, "format_accuracy": 0.1328125, "answer_accuracy": 0.00390625}
+{"step": 15, "reward": 0.0375, "loss": 0.0003, "grad_norm": 0.1438}
+{"step": 20, "reward": 0.0719, "loss": 0.0003, "grad_norm": 0.2042}
+
+Evaluating at step 20...
+{"step": 20, "accuracy": 0.19140625, "format_accuracy": 0.68359375, "answer_accuracy": 0.19140625}
+{"step": 25, "reward": 0.1406, "loss": 0.0004, "grad_norm": 0.3311}
+{"step": 30, "reward": 0.2719, "loss": 0.0006, "grad_norm": 0.3266}
+
+Evaluating at step 30...
+{"step": 30, "accuracy": 0.22265625, "format_accuracy": 0.77734375, "answer_accuracy": 0.22265625}
+{"step": 35, "reward": 0.2469, "loss": 0.0004, "grad_norm": 0.2576}
+{"step": 40, "reward": 0.2062, "loss": 0.0003, "grad_norm": 0.2626}
+
+Evaluating at step 40...
+{"step": 40, "accuracy": 0.25, "format_accuracy": 0.74609375, "answer_accuracy": 0.25}
+{"step": 45, "reward": 0.3563, "loss": 0.0003, "grad_norm": 0.408}
+{"step": 50, "reward": 0.325, "loss": 0.0002, "grad_norm": 0.2762}
+
+Evaluating at step 50...
+{"step": 50, "accuracy": 0.29296875, "format_accuracy": 0.68359375, "answer_accuracy": 0.29296875}
+{"step": 55, "reward": 0.3875, "loss": 0.0003, "grad_norm": 0.3275}
+{"step": 60, "reward": 0.2594, "loss": 0.0002, "grad_norm": 0.2259}
+
+Evaluating at step 60...
+{"step": 60, "accuracy": 0.28125, "format_accuracy": 0.74609375, "answer_accuracy": 0.28125}
+{"step": 65, "reward": 0.2687, "loss": 0.0002, "grad_norm": 0.1561}
+{"step": 70, "reward": 0.4313, "loss": 0.0003, "grad_norm": 0.2489}
+
+Evaluating at step 70...
+{"step": 70, "accuracy": 0.28515625, "format_accuracy": 0.734375, "answer_accuracy": 0.28515625}
+{"step": 75, "reward": 0.1781, "loss": 0.0002, "grad_norm": 0.1806}
+{"step": 80, "reward": 0.3375, "loss": 0.0003, "grad_norm": 0.3031}
+
+Evaluating at step 80...
+{"step": 80, "accuracy": 0.3203125, "format_accuracy": 0.78125, "answer_accuracy": 0.3203125}
+{"step": 85, "reward": 0.2781, "loss": 0.0002, "grad_norm": 0.2024}
+{"step": 90, "reward": 0.2969, "loss": 0.0001, "grad_norm": 0.1566}
+
+Evaluating at step 90...
+{"step": 90, "accuracy": 0.328125, "format_accuracy": 0.7890625, "answer_accuracy": 0.328125}
+{"step": 95, "reward": 0.2156, "loss": 0.0001, "grad_norm": 0.2912}
+{"step": 100, "reward": 0.3094, "loss": 0.0001, "grad_norm": 0.3045}
+
+Evaluating at step 100...
+{"step": 100, "accuracy": 0.3359375, "format_accuracy": 0.73046875, "answer_accuracy": 0.3359375}
+{"step": 105, "reward": 0.4156, "loss": 0.0001, "grad_norm": 0.1011}
+{"step": 110, "reward": 0.375, "loss": 0.0002, "grad_norm": 0.3039}
+
+Evaluating at step 110...
+{"step": 110, "accuracy": 0.3359375, "format_accuracy": 0.8046875, "answer_accuracy": 0.3359375}
+{"step": 115, "reward": 0.2594, "loss": 0.0001, "grad_norm": 0.2801}
+{"step": 120, "reward": 0.4125, "loss": 0.0002, "grad_norm": 0.2618}
+
+Evaluating at step 120...
+{"step": 120, "accuracy": 0.34375, "format_accuracy": 0.80078125, "answer_accuracy": 0.34375}
+{"step": 125, "reward": 0.3219, "loss": 0.0001, "grad_norm": 0.2239}
+{"step": 130, "reward": 0.3906, "loss": 0.0002, "grad_norm": 0.1612}
+
+Evaluating at step 130...
+{"step": 130, "accuracy": 0.359375, "format_accuracy": 0.7890625, "answer_accuracy": 0.359375}
+{"step": 135, "reward": 0.3812, "loss": 0.0001, "grad_norm": 0.2004}
+{"step": 140, "reward": 0.3344, "loss": 0.0001, "grad_norm": 0.0885}
+
+Evaluating at step 140...
+{"step": 140, "accuracy": 0.35546875, "format_accuracy": 0.80859375, "answer_accuracy": 0.35546875}
+{"step": 145, "reward": 0.4719, "loss": 0.0001, "grad_norm": 0.2142}
+{"step": 150, "reward": 0.4531, "loss": 0.0002, "grad_norm": 0.6605}
+
+Evaluating at step 150...
+{"step": 150, "accuracy": 0.3671875, "format_accuracy": 0.7890625, "answer_accuracy": 0.3671875}
+{"step": 155, "reward": 0.375, "loss": 0.0001, "grad_norm": 0.0878}
+{"step": 160, "reward": 0.3906, "loss": 0.0001, "grad_norm": 0.1427}
+
+Evaluating at step 160...
+{"step": 160, "accuracy": 0.375, "format_accuracy": 0.80859375, "answer_accuracy": 0.375}
+{"step": 165, "reward": 0.3625, "loss": 0.0001, "grad_norm": 0.2014}
+{"step": 170, "reward": 0.2844, "loss": 0.0001, "grad_norm": 0.1354}
+
+Evaluating at step 170...
+{"step": 170, "accuracy": 0.375, "format_accuracy": 0.80078125, "answer_accuracy": 0.375}
+{"step": 175, "reward": 0.4, "loss": 0.0002, "grad_norm": 0.2243}
+{"step": 180, "reward": 0.5719, "loss": 0.0003, "grad_norm": 0.3227}
+
+Evaluating at step 180...
+{"step": 180, "accuracy": 0.375, "format_accuracy": 0.79296875, "answer_accuracy": 0.375}
+{"step": 185, "reward": 0.4281, "loss": 0.0002, "grad_norm": 0.3389}
+{"step": 190, "reward": 0.4313, "loss": 0.0002, "grad_norm": 0.3139}
+
+Evaluating at step 190...
+{"step": 190, "accuracy": 0.3828125, "format_accuracy": 0.80078125, "answer_accuracy": 0.3828125}
+{"step": 195, "reward": 0.4781, "loss": 0.0003, "grad_norm": 0.2572}
+{"step": 200, "reward": 0.4469, "loss": 0.0003, "grad_norm": 0.5064}
+
+Evaluating at step 200...
+{"step": 200, "accuracy": 0.39453125, "format_accuracy": 0.7890625, "answer_accuracy": 0.39453125}
+{"step": 205, "reward": 0.3219, "loss": 0.0002, "grad_norm": 0.3521}
+{"step": 210, "reward": 0.3063, "loss": 0.0002, "grad_norm": 0.2833}
+
+Evaluating at step 210...
+{"step": 210, "accuracy": 0.3984375, "format_accuracy": 0.77734375, "answer_accuracy": 0.3984375}
+{"step": 215, "reward": 0.3281, "loss": 0.0003, "grad_norm": 0.766}
+{"step": 220, "reward": 0.3625, "loss": 0.0002, "grad_norm": 0.2029}
+
+Evaluating at step 220...
+{"step": 220, "accuracy": 0.39453125, "format_accuracy": 0.76171875, "answer_accuracy": 0.39453125}
+{"step": 225, "reward": 0.4562, "loss": 0.0002, "grad_norm": 0.1382}
+{"step": 230, "reward": 0.3969, "loss": 0.0002, "grad_norm": 0.2463}
+
+Evaluating at step 230...
+{"step": 230, "accuracy": 0.3984375, "format_accuracy": 0.7578125, "answer_accuracy": 0.3984375}
+{"step": 235, "reward": 0.4188, "loss": 0.0002, "grad_norm": 0.2547}
+{"step": 240, "reward": 0.4688, "loss": 0.0004, "grad_norm": 0.2212}
+
+Evaluating at step 240...
+{"step": 240, "accuracy": 0.40234375, "format_accuracy": 0.75, "answer_accuracy": 0.40234375}
+{"step": 245, "reward": 0.5437, "loss": 0.0004, "grad_norm": 0.3596}
+{"step": 250, "reward": 0.3844, "loss": 0.0004, "grad_norm": 0.3381}
+
+Evaluating at step 250...
+{"step": 250, "accuracy": 0.41796875, "format_accuracy": 0.78125, "answer_accuracy": 0.41796875}
+{"step": 255, "reward": 0.3312, "loss": 0.0003, "grad_norm": 0.1967}
+{"step": 260, "reward": 0.625, "loss": 0.0004, "grad_norm": 0.3471}
+
+Evaluating at step 260...
+{"step": 260, "accuracy": 0.41796875, "format_accuracy": 0.78125, "answer_accuracy": 0.41796875}
+{"step": 265, "reward": 0.3937, "loss": 0.0004, "grad_norm": 0.7025}
+{"step": 270, "reward": 0.4219, "loss": 0.0003, "grad_norm": 0.2067}
+
+Evaluating at step 270...
+{"step": 270, "accuracy": 0.41015625, "format_accuracy": 0.78125, "answer_accuracy": 0.41015625}
+{"step": 275, "reward": 0.5031, "loss": 0.0005, "grad_norm": 0.3658}
+{"step": 280, "reward": 0.3531, "loss": 0.0004, "grad_norm": 0.1834}
+
+Evaluating at step 280...
+{"step": 280, "accuracy": 0.421875, "format_accuracy": 0.77734375, "answer_accuracy": 0.421875}
+{"step": 285, "reward": 0.4125, "loss": 0.0003, "grad_norm": 0.1934}
+{"step": 290, "reward": 0.5656, "loss": 0.0005, "grad_norm": 0.2215}
+
+Evaluating at step 290...
+{"step": 290, "accuracy": 0.421875, "format_accuracy": 0.7890625, "answer_accuracy": 0.421875}
+{"step": 295, "reward": 0.3563, "loss": 0.0004, "grad_norm": 0.4629}
+{"step": 300, "reward": 0.3937, "loss": 0.0004, "grad_norm": 0.3101}
+
+Evaluating at step 300...
+{"step": 300, "accuracy": 0.42578125, "format_accuracy": 0.78125, "answer_accuracy": 0.42578125}
+{"step": 305, "reward": 0.4594, "loss": 0.0004, "grad_norm": 0.2287}
+{"step": 310, "reward": 0.5062, "loss": 0.0004, "grad_norm": 0.2795}
+
+Evaluating at step 310...
+{"step": 310, "accuracy": 0.421875, "format_accuracy": 0.78515625, "answer_accuracy": 0.421875}
+{"step": 315, "reward": 0.275, "loss": 0.0003, "grad_norm": 0.1715}
+{"step": 320, "reward": 0.4688, "loss": 0.0005, "grad_norm": 0.333}
+
+Evaluating at step 320...
+{"step": 320, "accuracy": 0.41796875, "format_accuracy": 0.77734375, "answer_accuracy": 0.41796875}
+{"step": 325, "reward": 0.3531, "loss": 0.0004, "grad_norm": 0.2721}
+{"step": 330, "reward": 0.3688, "loss": 0.0004, "grad_norm": 0.3299}
+
+Evaluating at step 330...
+{"step": 330, "accuracy": 0.41796875, "format_accuracy": 0.79296875, "answer_accuracy": 0.41796875}
+{"step": 335, "reward": 0.3781, "loss": 0.0004, "grad_norm": 0.1957}
+{"step": 340, "reward": 0.4813, "loss": 0.0004, "grad_norm": 0.1976}
+
+Evaluating at step 340...
+{"step": 340, "accuracy": 0.4296875, "format_accuracy": 0.78515625, "answer_accuracy": 0.4296875}
+{"step": 345, "reward": 0.3438, "loss": 0.0003, "grad_norm": 0.2338}
+{"step": 350, "reward": 0.3531, "loss": 0.0004, "grad_norm": 0.1999}
+
+Evaluating at step 350...
+{"step": 350, "accuracy": 0.4296875, "format_accuracy": 0.7890625, "answer_accuracy": 0.4296875}
+
+Saved final model to checkpoints/grpo/baselines/no_baseline/final
+
+Running final test evaluation...
+{"final_test": {"accuracy": 0.4228515625, "format_accuracy": 0.66015625, "answer_accuracy": 0.4228515625}}
+Done!
+############### End Log: 2026-04-07_21:57:42 ###############
+############### Run Log: 2026-04-07_21:57:43 ###############
+SLURM_ARRAY_TASK_ID: 1
+Tue Apr  7 21:57:43 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:4B:00.0 Off |                    0 |
+| N/A   29C    P0             86W /  500W |       0MiB /  81920MiB |    100%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA A100-SXM4-80GB          On  |   00000000:E3:00.0 Off |                    0 |
+| N/A   29C    P0            112W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+=== GRPO BASELINES ===
+Loss type: reinforce_with_baseline
+Run name: grpo-baseline-reinforce_with_baseline
+
+INFO 04-07 21:58:31 __init__.py:190] Automatically detected platform cuda.
+Namespace(train_path='data/countdown/dataset/train', val_path='data/countdown/dataset/dev', test_path='data/countdown/dataset/test', model='Qwen/Qwen2.5-Math-1.5B-Instruct', output_dir='checkpoints/grpo/baselines/reinforce_with_baseline', n_grpo_steps=350, rollout_batch_size=64, group_size=8, epochs_per_rollout_batch=1, gradient_accumulation_steps=32, learning_rate=3e-05, advantage_eps=1e-06, cliprange=0.2, sampling_temperature=0.7, sampling_min_tokens=4, sampling_max_tokens=1024, loss_type='reinforce_with_baseline', use_std_normalization=True, length_normalization='masked_mean', normalize_constant=None, grad_clip=1.0, warmup_ratio=0.0, eval_interval=10, max_val_examples=256, log_interval=5, wandb_project='grpo-countdown', wandb_name='grpo-baseline-reinforce_with_baseline', wandb_entity='csciga3033-llm-reasoners', seed=42, vllm_device='cuda:0', policy_device='cuda:1', gpu_memory_utilization=0.85)
+n_prompts_per_rollout_batch: 8
+train_batch_size: 64
+micro_train_batch_size: 2
+n_microbatches_per_rollout_batch (per epoch): 32
+Loading model and tokenizer...
+Loading datasets...
+Train: 10000, Val: 256
+Initializing vLLM...
+INFO 04-07 21:59:20 config.py:542] This model supports multiple tasks: {'embed', 'score', 'reward', 'classify', 'generate'}. Defaulting to 'generate'.
+INFO 04-07 21:59:20 llm_engine.py:234] Initializing a V0 LLM engine (v0.7.2) with config: model='Qwen/Qwen2.5-Math-1.5B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-Math-1.5B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda:0, decoding_config=DecodingConfig(guided_decoding_backend='xgrammar'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=Qwen/Qwen2.5-Math-1.5B-Instruct, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=False, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"splitting_ops":[],"compile_sizes":[],"cudagraph_capture_sizes":[256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":256}, use_cached_outputs=False, 
+INFO 04-07 21:59:21 cuda.py:230] Using Flash Attention backend.
+INFO 04-07 21:59:21 model_runner.py:1110] Starting to load model Qwen/Qwen2.5-Math-1.5B-Instruct...
+INFO 04-07 21:59:21 weight_utils.py:252] Using model weights format ['*.safetensors']
+INFO 04-07 21:59:21 weight_utils.py:297] No model.safetensors.index.json found in remote.
+INFO 04-07 21:59:22 model_runner.py:1115] Loading model weights took 2.8797 GB
+INFO 04-07 21:59:23 worker.py:267] Memory profiling takes 0.58 seconds
+INFO 04-07 21:59:23 worker.py:267] the current vLLM instance can use total_gpu_memory (79.25GiB) x gpu_memory_utilization (0.85) = 67.36GiB
+INFO 04-07 21:59:23 worker.py:267] model weights take 2.88GiB; non_torch_memory takes 0.09GiB; PyTorch activation peak memory takes 1.40GiB; the rest of the memory reserved for KV Cache is 62.99GiB.
+INFO 04-07 21:59:23 executor_base.py:110] # CUDA blocks: 147443, # CPU blocks: 9362
+INFO 04-07 21:59:23 executor_base.py:115] Maximum concurrency for 4096 tokens per request: 575.95x
+INFO 04-07 21:59:26 model_runner.py:1434] Capturing cudagraphs for decoding. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI. If out-of-memory error occurs during cudagraph capture, consider decreasing `gpu_memory_utilization` or switching to eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 04-07 21:59:49 model_runner.py:1562] Graph capturing finished in 22 secs, took 0.19 GiB
+INFO 04-07 21:59:49 llm_engine.py:431] init engine (profile, create kv cache, warmup model) took 26.40 seconds
+
+Running initial evaluation...
+{"step": 0, "accuracy": 0.0, "format_accuracy": 0.015625, "answer_accuracy": 0.0}
+
+Starting GRPO for 350 steps...
+{"step": 5, "reward": 0.0, "loss": 0.0, "grad_norm": 0.0}
+{"step": 10, "reward": 0.0031, "loss": 0.0, "grad_norm": 0.0629}
+
+Evaluating at step 10...
+{"step": 10, "accuracy": 0.00390625, "format_accuracy": 0.109375, "answer_accuracy": 0.00390625}
+{"step": 15, "reward": 0.0531, "loss": 0.0001, "grad_norm": 0.2824}
+{"step": 20, "reward": 0.0656, "loss": 0.0, "grad_norm": 0.3609}
+
+Evaluating at step 20...
+{"step": 20, "accuracy": 0.23046875, "format_accuracy": 0.546875, "answer_accuracy": 0.23046875}
+{"step": 25, "reward": 0.1719, "loss": -0.0002, "grad_norm": 0.4441}
+{"step": 30, "reward": 0.2781, "loss": -0.0002, "grad_norm": 0.6121}
+
+Evaluating at step 30...
+{"step": 30, "accuracy": 0.27734375, "format_accuracy": 0.5859375, "answer_accuracy": 0.27734375}
+{"step": 35, "reward": 0.2, "loss": -0.0001, "grad_norm": 1.5824}
+{"step": 40, "reward": 0.25, "loss": -0.0002, "grad_norm": 0.3531}
+
+Evaluating at step 40...
+{"step": 40, "accuracy": 0.34765625, "format_accuracy": 0.546875, "answer_accuracy": 0.34765625}
+{"step": 45, "reward": 0.3625, "loss": -0.0003, "grad_norm": 0.4594}
+{"step": 50, "reward": 0.425, "loss": -0.0005, "grad_norm": 0.6105}
+
+Evaluating at step 50...
+{"step": 50, "accuracy": 0.39453125, "format_accuracy": 0.58203125, "answer_accuracy": 0.39453125}
+{"step": 55, "reward": 0.5156, "loss": -0.0002, "grad_norm": 0.7879}
+{"step": 60, "reward": 0.4531, "loss": -0.0003, "grad_norm": 0.3777}
+
+Evaluating at step 60...
+{"step": 60, "accuracy": 0.4609375, "format_accuracy": 0.68359375, "answer_accuracy": 0.4609375}
+{"step": 65, "reward": 0.4625, "loss": -0.0004, "grad_norm": 1.0742}
+{"step": 70, "reward": 0.55, "loss": -0.0004, "grad_norm": 0.7535}
+
+Evaluating at step 70...
+{"step": 70, "accuracy": 0.49609375, "format_accuracy": 0.70703125, "answer_accuracy": 0.49609375}
+{"step": 75, "reward": 0.3594, "loss": -0.0003, "grad_norm": 0.3426}
+{"step": 80, "reward": 0.5031, "loss": -0.0005, "grad_norm": 0.8664}
+
+Evaluating at step 80...
+{"step": 80, "accuracy": 0.49609375, "format_accuracy": 0.8046875, "answer_accuracy": 0.49609375}
+{"step": 85, "reward": 0.45, "loss": -0.0006, "grad_norm": 1.05}
+{"step": 90, "reward": 0.4094, "loss": -0.0005, "grad_norm": 0.6137}
+
+Evaluating at step 90...
+{"step": 90, "accuracy": 0.515625, "format_accuracy": 0.73828125, "answer_accuracy": 0.515625}
+{"step": 95, "reward": 0.4406, "loss": -0.0005, "grad_norm": 0.9988}
+{"step": 100, "reward": 0.4437, "loss": -0.0014, "grad_norm": 1.2375}
+
+Evaluating at step 100...
+{"step": 100, "accuracy": 0.5390625, "format_accuracy": 0.703125, "answer_accuracy": 0.5390625}
+{"step": 105, "reward": 0.5437, "loss": -0.0014, "grad_norm": 0.9219}
+{"step": 110, "reward": 0.425, "loss": -0.0014, "grad_norm": 0.8914}
+
+Evaluating at step 110...
+{"step": 110, "accuracy": 0.52734375, "format_accuracy": 0.69921875, "answer_accuracy": 0.52734375}
+{"step": 115, "reward": 0.4594, "loss": -0.0011, "grad_norm": 0.859}
+{"step": 120, "reward": 0.5406, "loss": -0.0038, "grad_norm": 2.4375}
+
+Evaluating at step 120...
+{"step": 120, "accuracy": 0.51171875, "format_accuracy": 0.6171875, "answer_accuracy": 0.51171875}
+{"step": 125, "reward": 0.4469, "loss": -0.0083, "grad_norm": 6.85}
+{"step": 130, "reward": 0.4844, "loss": -0.026, "grad_norm": 22.9625}
+
+Evaluating at step 130...
+{"step": 130, "accuracy": 0.51171875, "format_accuracy": 0.5703125, "answer_accuracy": 0.51171875}
+{"step": 135, "reward": 0.4969, "loss": -0.0276, "grad_norm": 22.95}
+{"step": 140, "reward": 0.4406, "loss": -0.0285, "grad_norm": 29.625}
+
+Evaluating at step 140...
+{"step": 140, "accuracy": 0.5234375, "format_accuracy": 0.57421875, "answer_accuracy": 0.5234375}
+{"step": 145, "reward": 0.5375, "loss": -0.0545, "grad_norm": 33.8}
+{"step": 150, "reward": 0.5156, "loss": -0.0861, "grad_norm": 48.5562}
+
+Evaluating at step 150...
+{"step": 150, "accuracy": 0.51953125, "format_accuracy": 0.5703125, "answer_accuracy": 0.51953125}
+{"step": 155, "reward": 0.3969, "loss": -0.0423, "grad_norm": 25.7125}
+{"step": 160, "reward": 0.5469, "loss": -0.0542, "grad_norm": 38.0}
+
+Evaluating at step 160...
+{"step": 160, "accuracy": 0.546875, "format_accuracy": 0.6171875, "answer_accuracy": 0.546875}
+{"step": 165, "reward": 0.5563, "loss": -0.0923, "grad_norm": 48.35}
+{"step": 170, "reward": 0.5062, "loss": -0.1074, "grad_norm": 41.925}
+
+Evaluating at step 170...
+{"step": 170, "accuracy": 0.5234375, "format_accuracy": 0.59375, "answer_accuracy": 0.5234375}
+{"step": 175, "reward": 0.5344, "loss": -0.0765, "grad_norm": 24.2125}
+{"step": 180, "reward": 0.65, "loss": -0.062, "grad_norm": 39.925}
+
+Evaluating at step 180...
+{"step": 180, "accuracy": 0.546875, "format_accuracy": 0.609375, "answer_accuracy": 0.546875}
+{"step": 185, "reward": 0.525, "loss": -0.0895, "grad_norm": 25.575}
+{"step": 190, "reward": 0.5469, "loss": -0.1106, "grad_norm": 34.15}
+
+Evaluating at step 190...
+{"step": 190, "accuracy": 0.546875, "format_accuracy": 0.6171875, "answer_accuracy": 0.546875}
+{"step": 195, "reward": 0.5906, "loss": -0.1036, "grad_norm": 39.975}
+{"step": 200, "reward": 0.5625, "loss": -0.1439, "grad_norm": 45.3}
+
+Evaluating at step 200...
+{"step": 200, "accuracy": 0.515625, "format_accuracy": 0.578125, "answer_accuracy": 0.515625}
+{"step": 205, "reward": 0.3906, "loss": -0.1508, "grad_norm": 57.425}
+{"step": 210, "reward": 0.4313, "loss": -0.1345, "grad_norm": 39.675}
+
+Evaluating at step 210...
+{"step": 210, "accuracy": 0.5390625, "format_accuracy": 0.609375, "answer_accuracy": 0.5390625}
+{"step": 215, "reward": 0.4281, "loss": -0.1752, "grad_norm": 61.3}
+{"step": 220, "reward": 0.4656, "loss": -0.0904, "grad_norm": 36.725}
+
+Evaluating at step 220...
+{"step": 220, "accuracy": 0.5234375, "format_accuracy": 0.60546875, "answer_accuracy": 0.5234375}
+{"step": 225, "reward": 0.4688, "loss": -0.1653, "grad_norm": 35.175}
+{"step": 230, "reward": 0.475, "loss": -0.1429, "grad_norm": 59.875}
+
+Evaluating at step 230...
+{"step": 230, "accuracy": 0.515625, "format_accuracy": 0.609375, "answer_accuracy": 0.515625}
+{"step": 235, "reward": 0.5375, "loss": -0.1325, "grad_norm": 48.65}
+{"step": 240, "reward": 0.4719, "loss": -0.1563, "grad_norm": 51.05}
+
+Evaluating at step 240...
+{"step": 240, "accuracy": 0.50390625, "format_accuracy": 0.5703125, "answer_accuracy": 0.50390625}
+{"step": 245, "reward": 0.6094, "loss": -0.1891, "grad_norm": 63.4}
+{"step": 250, "reward": 0.475, "loss": -0.1009, "grad_norm": 23.625}
+
+Evaluating at step 250...
+{"step": 250, "accuracy": 0.53125, "format_accuracy": 0.6015625, "answer_accuracy": 0.53125}
+{"step": 255, "reward": 0.3906, "loss": -0.1741, "grad_norm": 71.1}
+{"step": 260, "reward": 0.675, "loss": -0.1378, "grad_norm": 43.5375}
+
+Evaluating at step 260...
+{"step": 260, "accuracy": 0.52734375, "format_accuracy": 0.61328125, "answer_accuracy": 0.52734375}
+{"step": 265, "reward": 0.5, "loss": -0.1603, "grad_norm": 59.625}
+{"step": 270, "reward": 0.4813, "loss": -0.0665, "grad_norm": 22.3211}
+
+Evaluating at step 270...
+{"step": 270, "accuracy": 0.51953125, "format_accuracy": 0.58984375, "answer_accuracy": 0.51953125}
+{"step": 275, "reward": 0.5781, "loss": -0.1565, "grad_norm": 60.225}
+{"step": 280, "reward": 0.4875, "loss": -0.0948, "grad_norm": 38.825}
+
+Evaluating at step 280...
+{"step": 280, "accuracy": 0.51953125, "format_accuracy": 0.6015625, "answer_accuracy": 0.51953125}
+{"step": 285, "reward": 0.4813, "loss": -0.1703, "grad_norm": 45.9125}
+{"step": 290, "reward": 0.6844, "loss": -0.152, "grad_norm": 32.275}
+
+Evaluating at step 290...
+{"step": 290, "accuracy": 0.5, "format_accuracy": 0.6015625, "answer_accuracy": 0.5}
+{"step": 295, "reward": 0.4562, "loss": -0.0651, "grad_norm": 43.45}
+{"step": 300, "reward": 0.4656, "loss": -0.1268, "grad_norm": 24.025}
+
+Evaluating at step 300...
+{"step": 300, "accuracy": 0.52734375, "format_accuracy": 0.6015625, "answer_accuracy": 0.52734375}
+{"step": 305, "reward": 0.5, "loss": -0.1493, "grad_norm": 58.15}
+{"step": 310, "reward": 0.5281, "loss": -0.1803, "grad_norm": 40.4}
+
+Evaluating at step 310...
+{"step": 310, "accuracy": 0.53125, "format_accuracy": 0.6015625, "answer_accuracy": 0.53125}
+{"step": 315, "reward": 0.3281, "loss": -0.1379, "grad_norm": 65.45}
+{"step": 320, "reward": 0.4906, "loss": -0.1854, "grad_norm": 87.0}
+
+Evaluating at step 320...
+{"step": 320, "accuracy": 0.5, "format_accuracy": 0.578125, "answer_accuracy": 0.5}
+{"step": 325, "reward": 0.4344, "loss": -0.1576, "grad_norm": 51.675}
+{"step": 330, "reward": 0.4625, "loss": -0.1818, "grad_norm": 47.85}
+
+Evaluating at step 330...
+{"step": 330, "accuracy": 0.515625, "format_accuracy": 0.6171875, "answer_accuracy": 0.515625}
+{"step": 335, "reward": 0.5, "loss": -0.153, "grad_norm": 32.9625}
+{"step": 340, "reward": 0.5188, "loss": -0.1242, "grad_norm": 44.325}
+
+Evaluating at step 340...
+{"step": 340, "accuracy": 0.5390625, "format_accuracy": 0.61328125, "answer_accuracy": 0.5390625}
+{"step": 345, "reward": 0.3781, "loss": -0.1461, "grad_norm": 32.2}
+{"step": 350, "reward": 0.4781, "loss": -0.1739, "grad_norm": 59.1}
+
+Evaluating at step 350...
+{"step": 350, "accuracy": 0.515625, "format_accuracy": 0.58203125, "answer_accuracy": 0.515625}
+
+Saved final model to checkpoints/grpo/baselines/reinforce_with_baseline/final
+
+Running final test evaluation...
+{"final_test": {"accuracy": 0.4951171875, "format_accuracy": 0.6513671875, "answer_accuracy": 0.4951171875}}
+Done!
+############### End Log: 2026-04-07_23:36:41 ###############

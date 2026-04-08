@@ -4,7 +4,7 @@
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=4:00:00
+#SBATCH --time=30:00:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --open-mode=append
 #SBATCH --error=logs/%x_%j.err
@@ -12,7 +12,7 @@
 #SBATCH --chdir=/scratch/ab12057/nyu-llm-reasoners-a3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ab12057@nyu.edu
-#SBATCH --array=0-3%4
+#SBATCH --array=4
 
 set -e
 
@@ -31,8 +31,8 @@ MAX_EXAMPLES=${MAX_EXAMPLES_CONFIGS[$SLURM_ARRAY_TASK_ID]}
 # Training hyperparameters
 BATCH_SIZE=4
 GRADIENT_ACCUMULATION_STEPS=56
-NUM_EPOCHS=25
-EVAL_POINTS=10
+NUM_EPOCHS=35
+EVAL_POINTS=3
 LEARNING_RATE=2e-5
 GRAD_CLIP=1.0
 WARMUP_RATIO=0.1

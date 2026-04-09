@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=nyu_llm_reasoners_sft
+#SBATCH --job-name=sft_finetuning
 #SBATCH --account=torch_pr_647_cds
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
@@ -27,6 +27,28 @@ echo "Current working directory: $(pwd)"
 echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
 
 nvidia-smi
+
+# Keep cuda:0 (vLLM eval device) above HPC 50% utilization threshold during training.
+# The SFT policy trains on cuda:1; cuda:0 is only used during periodic evaluation.
+# Without this, HPC cancels the job after 2+ hours of 0% GPU 0 utilization.
+echo "Starting GPU keepalive on cuda:0..."
+KEEPALIVE_LOG=$(mktemp)
+uv run python -c "
+import signal, sys, time, torch
+signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+t = torch.randn(4096, 4096, device='cuda:0', dtype=torch.bfloat16)
+print('GPU keepalive running on cuda:0...', flush=True)
+while True:
+    torch.matmul(t, t)
+    time.sleep(0.001)
+" > "$KEEPALIVE_LOG" 2>&1 &
+GPU_KEEPALIVE_PID=$!
+
+echo "Waiting for GPU keepalive to initialize..."
+until grep -q "GPU keepalive running" "$KEEPALIVE_LOG" 2>/dev/null; do
+    sleep 1
+done
+echo "GPU keepalive confirmed running (PID: $GPU_KEEPALIVE_PID)."
 
 # Dataset size configurations (None = full dataset)
 MAX_EXAMPLES_CONFIGS=(128 256 512 1024 "None")
@@ -87,21 +109,6 @@ mkdir -p "$OUTPUT_DIR"
 source ~/.bashrc
 
 export HF_HOME=/scratch/$USER/.cache/huggingface
-
-# Keep cuda:0 (vLLM eval device) above HPC 50% utilization threshold during training.
-# The SFT policy trains on cuda:1; cuda:0 is only used during periodic evaluation.
-# Without this, HPC cancels the job after 2+ hours of 0% GPU 0 utilization.
-echo "Starting GPU keepalive on cuda:0..."
-uv run python -c "
-import signal, sys, time, torch
-signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
-t = torch.randn(4096, 4096, device='cuda:0', dtype=torch.bfloat16)
-print('GPU keepalive running on cuda:0...')
-while True:
-    torch.matmul(t, t)
-    time.sleep(0.001)
-" &
-GPU_KEEPALIVE_PID=$!
 
 echo "Starting training..."
 uv run student/sft_experiment.py \

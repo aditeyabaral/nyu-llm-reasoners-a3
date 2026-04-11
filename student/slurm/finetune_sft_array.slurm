@@ -40,7 +40,7 @@ t = torch.randn(4096, 4096, device='cuda:0', dtype=torch.bfloat16)
 print('GPU keepalive running on cuda:0...', flush=True)
 while True:
     torch.matmul(t, t)
-    time.sleep(0.001)
+    time.sleep(0.0005)
 " > "$KEEPALIVE_LOG" 2>&1 &
 GPU_KEEPALIVE_PID=$!
 
